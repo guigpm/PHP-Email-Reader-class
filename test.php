@@ -10,7 +10,7 @@
 	$server = 'yourmailserver';
 	$user   = 'youraccount';
 	$pass   = 'yourpassword';
-	$port   = 110;
+	$port   = \EmailReader\EmailPort::POP;
 	$type   = \EmailReader\EmailType::POP;
 
 	$email = new \EmailReader\EmailReader(
