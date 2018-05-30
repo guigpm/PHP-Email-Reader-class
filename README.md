@@ -1,0 +1,1 @@
+Base to access e-mail via IMAP in PHP

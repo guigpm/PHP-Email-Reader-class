@@ -1,85 +1,110 @@
 <?php
+namespace EmailReader;
+
+/**
+ * @author Guilherme Mattioli
+ * @version 1.0
+ */
 class EmailReader {
 
-	public $conn;
+	public $conn = null;
 
-	private $_inbox;
-	private $_msgCnt;
+	private $__inbox = array();
+	private $__msgCnt = 0;
+	private $__config = null;
 
-	private $_server = 'yourmailserver';
-	private $_user   = 'youraccount';
-	private $_pass   = 'yourpassword';
-	private $_port   = 110; 
-	private $_type = 'pop3';
+	public function __construct(EmailConfig $config = null) {
+		if ($config) {
+			$this->set_config($config);
+			$this->__init__();
+		}
 
-	
-	public function __construct() {
-		$this->_connect();
-		$this->_inbox();
 	}
 
-	/** @param None
-	  * @return Void
-	  * Closes the connection
-	  */
-	private function _close() {
-		$this->_inbox = array();
-		$this->_msgCnt = 0;
-
-		imap_close($this->conn);
+	private function __init__() {
+		if ($this->conn === null and $this->__config) {
+			$this->__connect();
+			$this->__inbox();
+		}
 	}
 
-	
-	/** @param None
-	  * @return Void
-	  * Opens a connection
-	  */
-
-	private function _connect() {
-		$this->conn = imap_open('{'.$this->_server.':' . $this->_port . '/' . $this->_type .'}', $this->_user, $this->_pass);
+	public function set_config(EmailConfig $config) {
+		$this->__config = $config;
 	}
 
-	/** @param int $msgIndex Index of a message
-	  * @param string $folder The name of a folder
-	  * @return Void
-	  * Moves a message to a new folder
-	  */
+	/**
+	 * @param None
+	 * @return Void
+	 * Closes the connection
+	 */
+	private function __close() {
+		$this->__inbox = array();
+		$this->__msgCnt = 0;
 
-	public function move($msgIndex, $folder='INBOX.Processed') {
+		if ($this->conn) {
+			imap_close($this->conn);
+		}
+		$this->conn = null;
+	}
+
+	/**
+	 * @param None
+	 * @return Void
+	 * Opens a connection
+	 */
+	private function __connect() {
+		if (!$this->__config) return null;
+		$this->conn = imap_open(
+			$this->__config->get_conn_string(),
+			$this->__config->get_user(),
+			$this->__config->get_pass()
+		);
+	}
+
+	/**
+	 * @param int $msg_index Index of a message
+	 * @param string $folder The name of a folder
+	 * @return Void
+	 * Moves a message to a new folder
+	 */
+	public function move($msg_index, $folder='INBOX.Processed') {
+		$this->__init__();
 		// move on server
-		imap_mail_move($this->conn, $msgIndex, $folder);
+		imap_mail_move($this->conn, $msg_index, $folder);
 		imap_expunge($this->conn);
 
 		// re-read the inbox
-		$this->_inbox();
+		$this->__inbox();
 	}
 
-	/** @param int $mgsIndex Index of a message
-	  * @return array The associative array of a message
-	  * Gets a specific message
-	  */
-
-	public function get($msgIndex = null) {
-		if (count($this->_inbox) <= 0) {
+	/**
+	 * @param int $mgsIndex Index of a message
+	 * @return array The associative array of a message
+	 * Gets a specific message
+	 */
+	public function get($msg_index = null) {
+		$this->__init__();
+		if (count($this->__inbox) <= 0) {
 			return array();
 		}
-		elseif ( ! is_null($msgIndex) && isset($this->_inbox[$msgIndex])) {
-			return $this->_inbox[$msgIndex];
+		elseif ( ! is_null($msg_index) && isset($this->__inbox[$msg_index])) {
+			return $this->__inbox[$msg_index];
 		}
 
-		return $this->_inbox[0];
+		return $this->__inbox[0];
 	}
 
-	/** @param None
-	  * @return array The associative array of each message
-	  * Reads the inbox
-	  */
-
-	private function _inbox() {
-		$this->_msgCnt = imap_num_msg($this->conn);
+	/**
+	 * @param None
+	 * @return array The associative array of each message
+	 * Reads the inbox
+	 */
+	private function __inbox() {
+		if (!$this->conn) return null;
+		$this->__msgCnt = imap_num_msg($this->conn);
 
 		$in = array();
-		for($i = 1; $i <= $this->_msgCnt; $i++) {
+		for($i = 1; $i <= $this->__msgCnt; $i++) {
 			$in[] = array(
 				'index'     => $i,
 				'header'    => imap_headerinfo($this->conn, $i),
@@ -88,19 +113,19 @@ class EmailReader {
 			);
 		}
 
-		$this->_inbox = $in;
+		$this->__inbox = $in;
 	}
 
-	/** @param None
-	  * @return array The inbox associative array
-	  * Gets the inbox associative array
-	  */
-
-	public function getInbox() {
-		$inbox = $this->_inbox;
+	/**
+	 * @param None
+	 * @return array The inbox associative array
+	 * Gets the inbox associative array
+	 */
+	public function get_inbox() {
+		$this->__init__();
+		$inbox = $this->__inbox;
 		return $inbox;
 	}
 
 }
-
 

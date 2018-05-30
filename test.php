@@ -1,4 +1,4 @@
-<?php require_once('EmailReader.php'); ?>
+<?php require_once('bootstrap.php'); ?>
 <!doctype html>
 <html>
 <head>
@@ -6,10 +6,20 @@
 	<meta charset="utf-8" />
 </head>
 <body>
-	<?php
-         $email = new EmailReader();
-         $inbox = $email->getInbox();
-         print_r($inbox);
-	?>
+<?php
+	$server = 'yourmailserver';
+	$user   = 'youraccount';
+	$pass   = 'yourpassword';
+	$port   = 110;
+	$type   = \EmailReader\EmailType::POP;
+
+	$email = new \EmailReader\EmailReader(
+		new \EmailReader\EmailConfig(
+			$server, $user, $pass, $port, $type
+		)
+	);
+	$inbox = $email->get_inbox();
+	print_r($inbox);
+?>
 </body>
 </html>
