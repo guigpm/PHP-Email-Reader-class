@@ -33,9 +33,10 @@ class EmailReader {
 	}
 
 	/**
+	 * Closes the connection
+	 *
 	 * @param None
 	 * @return Void
-	 * Closes the connection
 	 */
 	private function __close() {
 		$this->__inbox = array();
@@ -48,9 +49,10 @@ class EmailReader {
 	}
 
 	/**
+	 * Opens a connection
+	 *
 	 * @param None
 	 * @return Void
-	 * Opens a connection
 	 */
 	private function __connect() {
 		if (!$this->__config) return null;
@@ -75,13 +77,20 @@ class EmailReader {
 	}
 
 	/**
+	 * Moves a message to a new folder
+	 *
 	 * @param int $msg_index Index of a message
 	 * @param string $folder The name of a folder
 	 * @return Void
-	 * Moves a message to a new folder
 	 */
-	public function move($msg_index, $folder='INBOX.Processed') {
+	public function move($msg_index, $folder = null) {
 		$this->__init__();
+		if (!$this->__config) return null;
+		if ($folder === null) {
+			$folder = $this->__config->get_inbox_folder() . '.Processed';
+		} elseif ($folder === false) {
+			$folder = $this->__config->get_inbox_folder();
+		}
 		// move on server
 		imap_mail_move($this->conn, $msg_index, $folder);
 		imap_expunge($this->conn);
@@ -91,9 +100,10 @@ class EmailReader {
 	}
 
 	/**
+	 * Gets a specific message
+	 *
 	 * @param int $mgsIndex Index of a message
 	 * @return array The associative array of a message
-	 * Gets a specific message
 	 */
 	public function get($msg_index = null) {
 		$this->__init__();
@@ -107,9 +117,10 @@ class EmailReader {
 	}
 
 	/**
+	 * Reads the inbox
+	 *
 	 * @param None
 	 * @return array The associative array of each message
-	 * Reads the inbox
 	 */
 	private function __inbox() {
 		if (!$this->conn) return null;
@@ -129,9 +140,10 @@ class EmailReader {
 	}
 
 	/**
+	 * Gets the inbox associative array
+	 *
 	 * @param None
 	 * @return array The inbox associative array
-	 * Gets the inbox associative array
 	 */
 	public function get_inbox() {
 		$this->__init__();
