@@ -54,11 +54,24 @@ class EmailReader {
 	 */
 	private function __connect() {
 		if (!$this->__config) return null;
-		$this->conn = imap_open(
-			$this->__config->get_conn_string(),
-			$this->__config->get_user(),
-			$this->__config->get_pass()
-		);
+
+		try {
+			$this->conn = imap_open(
+				$this->__config->get_conn_string(),
+				$this->__config->get_user(),
+				$this->__config->get_pass()
+			);
+		} catch (Exception $e) {
+			throw new EmailException("{$e}", $e->getCode(), $e);
+		}
+
+		if (!$this->conn) {
+			throw new EmailException(
+				"Não foi possível conectar com "
+				. $this->__config->get_conn_string()
+			);
+		}
+
 	}
 
 	/**
@@ -86,8 +99,7 @@ class EmailReader {
 		$this->__init__();
 		if (count($this->__inbox) <= 0) {
 			return array();
-		}
-		elseif ( ! is_null($msg_index) && isset($this->__inbox[$msg_index])) {
+		} elseif (!is_null($msg_index) and isset($this->__inbox[$msg_index])) {
 			return $this->__inbox[$msg_index];
 		}
 
