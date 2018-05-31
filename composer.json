@@ -4,8 +4,14 @@
     "keywords": ["e-mail", "pop", "pop3", "imap", "ssl", "tls"],
     "license": "MIT",
     "type": "library",
-    "authors": [{"name": "Guilherme Mattioli", "email": "guilherme@socarrao.com.br"}],
-    "require": {},
+    "authors": [{"name": "Guilherme Mattioli", "email": "guigpm@hotmail.com"}],
+    "homepage": "https://github.com/guigpm/PHP-Email-Reader-class",
+    "require": {
+        "php": ">=5.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.8.*"
+    },
     "autoload": {
         "psr-4": {
             "Mattioli\\EmailReader\\": "src/"
@@ -13,7 +19,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Mattioli\\EmailReader\\": "src/"
+            "Mattioli\\EmailReader\\Tests\\": "tests/"
         }
     }
 }

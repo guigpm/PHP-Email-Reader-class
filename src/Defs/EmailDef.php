@@ -1,5 +1,5 @@
 <?php
-namespace Mattioli\EmailReader\Def;
+namespace Mattioli\EmailReader\Defs;
 
 /**
  * @author Guilherme Mattioli

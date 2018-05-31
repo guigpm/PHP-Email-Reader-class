@@ -1,7 +1,5 @@
-# What is this?
-##### Base to access e-mail via IMAP in PHP
+<?php require_once(__DIR__ . '/test/bootstrap.php');
 
-# How to?
 	$server = 'yourmailserver';
 	$user   = 'youraccount';
 	$pass   = 'yourpassword';
