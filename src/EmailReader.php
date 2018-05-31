@@ -103,22 +103,22 @@ class EmailReader {
 	 *
 	 * @param int $msg_index Index of a message
 	 * @param string $folder The name of a folder
-	 * @return Void
+	 * @return boolean If was moved
 	 */
 	public function move($msg_index, $folder = null) {
-		$this->__init__();
-		if (!$this->__config) return null;
-		if ($folder === null) {
-			$folder = $this->__config->get_inbox_folder() . '.Processed';
-		} elseif ($folder === false) {
-			$folder = $this->__config->get_inbox_folder();
-		}
-		// move on server
-		imap_mail_move($this->conn, $msg_index, $folder);
-		imap_expunge($this->conn);
+		return $this->__action($msg_index, function ($msg) use ($folder) {
+			if (!$this->__config) return null;
+			if ($folder === null) {
+				$folder = $this->__config->get_inbox_folder() . '.Processed';
+			} elseif ($folder === false) {
+				$folder = $this->__config->get_inbox_folder();
+			}
+			$moved = $msg->move_to($folder);
 
-		// re-read the inbox
-		$this->__inbox();
+			// re-read the inbox
+			$this->__inbox();
+			return $moved;
+		});
 	}
 
 	/**
@@ -130,6 +130,22 @@ class EmailReader {
 	public function get($msg_index = 0) {
 		return $this->__action($msg_index, function ($msg) {
 			return $msg->get_all();
+		});
+	}
+
+	/**
+	 * Delete a specific message
+	 *
+	 * @param int $mgsIndex Index of a message
+	 * @return boolean If was deleted
+	 */
+	public function delete($msg_index = 0) {
+		return $this->__action($msg_index, function ($msg) {
+			$deleted = $msg->delete();
+
+			// re-read the inbox
+			$this->__inbox();
+			return $deleted;
 		});
 	}
 
