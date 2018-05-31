@@ -1,5 +1,5 @@
 {
-    "name": "Mattioli/EmailReader",
+    "name": "mattioli/email-reader",
     "description": "Read emails from account.",
     "keywords": ["e-mail", "pop", "pop3", "imap", "ssl", "tls"],
     "license": "MIT",
