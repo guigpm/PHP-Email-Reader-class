@@ -3,6 +3,7 @@ namespace Mattioli\EmailReader;
 
 use Mattioli\EmailReader\Defs\EmailPort;
 use Mattioli\EmailReader\Defs\EmailType;
+use Mattioli\EmailReader\Defs\ReadType;
 
 /**
  * @author Guilherme Mattioli
@@ -11,21 +12,29 @@ use Mattioli\EmailReader\Defs\EmailType;
 class EmailConfig {
 
 	private $__server = 'yourmailserver';
-	private $__user   = 'youraccount';
-	private $__pass   = 'yourpassword';
-	private $__port   = null;
-	private $__type = null;
+	private $__user = 'youraccount';
+	private $__pass = 'yourpassword';
+	private $__port = EmailPort::POP;
+	private $__type = EmailType::POP;
+	private $__read_type = ReadType::ALL;
 	private $__inbox_folder = 'INBOX';
 
-	function __construct($server, $user, $pass, $port = EmailPort::IMAP, $type = EmailType::IMAP, $inbox_folder = null) {
+	function __construct(
+		$server,
+		$user,
+		$pass,
+		$port = EmailPort::POP,
+		$type = EmailType::POP,
+		$inbox_folder = null,
+		$read_type = ReadType::ALL
+	) {
 		$this->__server = $server;
 		$this->__user = $user;
 		$this->__pass = $pass;
 		$this->__port = $port;
 
-		if (in_array($type, EmailType::get_types())) {
-			$this->__type = $type;
-		}
+		$this->set_email_type($type);
+		$this->set_read_type($read_type);
 		$this->set_inbox_folder($inbox_folder);
 	}
 
@@ -37,6 +46,32 @@ class EmailConfig {
 	public function get_inbox_folder() {
 		return $this->__inbox_folder;
 	}
+
+	// --
+
+	public function set_read_type($read_type) {
+		if (in_array($read_type, ReadType::get_types())) {
+			$this->__read_type = $read_type;
+		}
+	}
+
+	public function get_read_type() {
+		return $this->__read_type;
+	}
+
+	// --
+
+	public function set_email_type($type) {
+		if (in_array($type, EmailType::get_types())) {
+			$this->__type = $type;
+		}
+	}
+
+	public function get_email_type() {
+		return $this->__type;
+	}
+
+	// --
 
 	public function get_conn_string() {
 		return '{'

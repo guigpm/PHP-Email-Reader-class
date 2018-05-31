@@ -30,7 +30,7 @@ class EmailMessage implements \JsonSerializable {
 		$this->index = $index;
 	}
 
-	public function get_header() {
+	public function get_headers() {
 		if ($this->header === null) {
 			$this->header = imap_headerinfo($this->__conn, $this->index);
 		}
@@ -52,7 +52,7 @@ class EmailMessage implements \JsonSerializable {
 	}
 
 	public function get_all() {
-		$this->get_header();
+		$this->get_headers();
 		$this->get_structure();
 		$this->get_body();
 		return $this->jsonSerialize();

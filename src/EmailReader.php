@@ -4,6 +4,7 @@ namespace Mattioli\EmailReader;
 use Mattioli\EmailReader\EmailConfig;
 use Mattioli\EmailReader\Exception\EmailResourceException;
 use Mattioli\EmailReader\Exception\EmailException;
+use Mattioli\EmailReader\Defs\ReadType;
 use Mattioli\EmailReader\EmailMessage;
 
 /**
@@ -81,6 +82,7 @@ class EmailReader {
 	}
 
 	private function __action($msg_index, $callback) {
+		if (!$this->__config) return null;
 		if (!is_integer($msg_index)) {
 			throw new EmailException("index is not a integer");
 		}
@@ -107,7 +109,6 @@ class EmailReader {
 	 */
 	public function move($msg_index, $folder = null) {
 		return $this->__action($msg_index, function ($msg) use ($folder) {
-			if (!$this->__config) return null;
 			if ($folder === null) {
 				$folder = $this->__config->get_inbox_folder() . '.Processed';
 			} elseif ($folder === false) {
@@ -161,7 +162,16 @@ class EmailReader {
 
 		$this->__inbox = array();
 		for($i = 1; $i <= $this->__msgCnt; $i++) {
-			$this->__inbox[] = new EmailMessage($this->conn, $i);
+			$mail = new EmailMessage($this->conn, $i);
+			$r_type = $this->__config->get_read_type();
+			if ($r_type !== ReadType::ALL) {
+				$headers = $mail->get_headers();
+				if ($headers->Unseen !== $r_type) {
+					continue;
+				}
+			}
+
+			$this->__inbox[] = $mail;
 		}
 		return $this;
 	}
