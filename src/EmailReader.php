@@ -1,5 +1,10 @@
 <?php
-namespace EmailReader;
+namespace Mattioli\EmailReader;
+
+use Mattioli\EmailReader\EmailConfig;
+use Mattioli\EmailReader\Exception\EmailResourceException;
+use Mattioli\EmailReader\Exception\EmailException;
+use Mattioli\EmailReader\EmailMessage;
 
 /**
  * @author Guilherme Mattioli
@@ -62,7 +67,7 @@ class EmailReader {
 				$this->__config->get_user(),
 				$this->__config->get_pass()
 			);
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			throw new EmailException("{$e}", $e->getCode(), $e);
 		}
 

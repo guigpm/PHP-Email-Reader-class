@@ -1,12 +1,19 @@
 {
-    "name": "mattioli/email-reader",
-    "description": "Read emails from account",
+    "name": "Mattioli/EmailReader",
+    "description": "Read emails from account.",
+    "keywords": ["e-mail", "pop", "pop3", "imap", "ssl", "tls"],
+    "license": "MIT",
     "type": "library",
-    "authors": [
-        {
-            "name": "Guilherme Mattioli",
-            "email": "guilherme@socarrao.com.br"
+    "authors": [{"name": "Guilherme Mattioli", "email": "guilherme@socarrao.com.br"}],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Foolz\\SphinxQL\\": "src/"
         }
-    ],
-    "require": {}
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Foolz\\SphinxQL\\": "src/"
+        }
+    }
 }

@@ -1,5 +1,5 @@
 <?php
-namespace EmailReader;
+namespace Mattioli\EmailReader\Exception;
 
 /**
  * @author Guilherme Mattioli
@@ -10,7 +10,7 @@ class EmailException extends \Exception {
 	private $imap_last_error = null;
 
 	// Redefine the exception so message isn't optional
-	public function __construct($message, $code = 0, Exception $previous = null) {
+	public function __construct($message, $code = 0, \Exception $previous = null) {
 		$this->imap_last_error = imap_last_error();
 
 		// make sure everything is assigned properly

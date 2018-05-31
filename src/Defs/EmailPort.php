@@ -1,11 +1,13 @@
 <?php
-namespace EmailReader;
+namespace Mattioli\EmailReader\Def;
+
+use Mattioli\EmailReader\Def\EmailDef;
 
 /**
  * @author Guilherme Mattioli
  * @version 1.0
  */
-class EmailPort {
+class EmailPort extends EmailDef {
 	const NONE = null;
 	const POP = 110;
 	const POP_SSL = 995;

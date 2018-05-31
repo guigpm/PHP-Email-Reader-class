@@ -1,5 +1,8 @@
 <?php
-namespace EmailReader;
+namespace Mattioli\EmailReader;
+
+use Mattioli\EmailReader\Exception\EmailResourceException;
+use Mattioli\EmailReader\Exception\EmailException;
 
 /**
  * @author Guilherme Mattioli

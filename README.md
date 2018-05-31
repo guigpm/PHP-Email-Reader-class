@@ -5,11 +5,11 @@
 	$server = 'yourmailserver';
 	$user   = 'youraccount';
 	$pass   = 'yourpassword';
-	$port   = \EmailReader\EmailPort::POP;
-	$type   = \EmailReader\EmailType::POP;
+	$port   = \Mattioli\EmailReader\EmailPort::POP;
+	$type   = \Mattioli\EmailReader\EmailType::POP;
 
-	$email = new \EmailReader\EmailReader(
-		new \EmailReader\EmailConfig(
+	$email = new \Mattioli\EmailReader\Mattioli\EmailReader(
+		new \Mattioli\EmailReader\EmailConfig(
 			$server, $user, $pass, $port, $type
 		)
 	);
