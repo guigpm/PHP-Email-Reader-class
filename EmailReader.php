@@ -23,8 +23,7 @@ class EmailReader {
 
 	private function __init__() {
 		if ($this->conn === null and $this->__config) {
-			$this->__connect();
-			$this->__inbox();
+			$this->__connect()->__inbox();
 		}
 	}
 
@@ -73,7 +72,25 @@ class EmailReader {
 				. $this->__config->get_conn_string()
 			);
 		}
+		return $this;
+	}
 
+	private function __action($msg_index, $callback) {
+		if (!is_integer($msg_index)) {
+			throw new EmailException("index is not a integer");
+		}
+		if ($msg_index < 0) {
+			throw new EmailException("index is less than 0");
+		}
+		$this->__init__();
+		if (count($this->__inbox) <= 0) {
+			return null;
+		} elseif (!is_null($msg_index) and isset($this->__inbox[$msg_index])) {
+			$msg = $this->__inbox[$msg_index];
+			return $callback($msg);
+		}
+
+		return null;
 	}
 
 	/**
@@ -105,15 +122,10 @@ class EmailReader {
 	 * @param int $mgsIndex Index of a message
 	 * @return array The associative array of a message
 	 */
-	public function get($msg_index = null) {
-		$this->__init__();
-		if (count($this->__inbox) <= 0) {
-			return array();
-		} elseif (!is_null($msg_index) and isset($this->__inbox[$msg_index])) {
-			return $this->__inbox[$msg_index];
-		}
-
-		return $this->__inbox[0];
+	public function get($msg_index = 0) {
+		return $this->__action($msg_index, function ($msg) {
+			return $msg->get_all();
+		});
 	}
 
 	/**
@@ -126,17 +138,11 @@ class EmailReader {
 		if (!$this->conn) return null;
 		$this->__msgCnt = imap_num_msg($this->conn);
 
-		$in = array();
+		$this->__inbox = array();
 		for($i = 1; $i <= $this->__msgCnt; $i++) {
-			$in[] = array(
-				'index'     => $i,
-				'header'    => imap_headerinfo($this->conn, $i),
-				'body'      => imap_body($this->conn, $i),
-				'structure' => imap_fetchstructure($this->conn, $i)
-			);
+			$this->__inbox[] = new EmailMessage($this->conn, $i);
 		}
-
-		$this->__inbox = $in;
+		return $this;
 	}
 
 	/**

@@ -23,3 +23,5 @@ class EmailException extends \Exception {
 		. print_r($this->imap_last_error, true);
 	}
 }
+
+class EmailResourceException extends \Exception { }
