@@ -8,12 +8,12 @@
     "require": {},
     "autoload": {
         "psr-4": {
-            "Foolz\\SphinxQL\\": "src/"
+            "Mattioli\\EmailReader\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Foolz\\SphinxQL\\": "src/"
+            "Mattioli\\EmailReader\\": "src/"
         }
     }
 }
