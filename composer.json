@@ -1,0 +1,12 @@
+{
+    "name": "mattioli/email-reader",
+    "description": "Read emails from account",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Guilherme Mattioli",
+            "email": "guilherme@socarrao.com.br"
+        }
+    ],
+    "require": {}
+}
