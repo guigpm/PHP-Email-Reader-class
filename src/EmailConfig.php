@@ -4,6 +4,7 @@ namespace Mattioli\EmailReader;
 use Mattioli\EmailReader\Defs\EmailPort;
 use Mattioli\EmailReader\Defs\EmailType;
 use Mattioli\EmailReader\Defs\ReadType;
+use Mattioli\EmailReader\Defs\EmailFolder;
 
 /**
  * @author Guilherme Mattioli
@@ -17,7 +18,7 @@ class EmailConfig {
 	private $__port = EmailPort::POP;
 	private $__type = EmailType::POP;
 	private $__read_type = ReadType::ALL;
-	private $__inbox_folder = 'INBOX';
+	private $__inbox_folder = EmailFolder::INBOX;
 
 	function __construct(
 		$server,

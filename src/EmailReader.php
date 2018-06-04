@@ -114,7 +114,7 @@ class EmailReader {
 			} elseif ($folder === false) {
 				$folder = $this->__config->get_inbox_folder();
 			}
-			$moved = $msg->move_to($folder);
+			$moved = $msg->move_to($folder, '');
 
 			// re-read the inbox
 			$this->__inbox();

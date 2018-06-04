@@ -3,6 +3,7 @@ namespace Mattioli\EmailReader;
 
 use Mattioli\EmailReader\Exception\EmailResourceException;
 use Mattioli\EmailReader\Exception\EmailException;
+use Mattioli\EmailReader\Defs\EmailFolder;
 
 /**
  * @author Guilherme Mattioli
@@ -58,9 +59,14 @@ class EmailMessage implements \JsonSerializable {
 		return $this->jsonSerialize();
 	}
 
-	public function move_to($folder) {
+	public function move_to($folder, $prefix = '.') {
+		if ($prefix === '.') {
+			$prefix = EmailFolder::INBOX . '.';
+		}
 		// move on server
-		$moved = imap_mail_move($this->__conn, $this->index, $folder);
+		$moved = imap_mail_move(
+			$this->__conn, $this->index, $prefix . $folder
+		);
 		imap_expunge($this->__conn);
 		return $moved;
 	}
