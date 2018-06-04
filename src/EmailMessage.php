@@ -52,6 +52,10 @@ class EmailMessage implements \JsonSerializable {
 		return $this->body;
 	}
 
+	public function get_body_section($section) {
+		return imap_fetchbody($this->__conn, $this->index, $section);
+	}
+
 	public function get_all() {
 		$this->get_headers();
 		$this->get_structure();

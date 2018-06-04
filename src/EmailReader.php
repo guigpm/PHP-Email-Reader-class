@@ -5,6 +5,7 @@ use Mattioli\EmailReader\EmailConfig;
 use Mattioli\EmailReader\Exception\EmailResourceException;
 use Mattioli\EmailReader\Exception\EmailException;
 use Mattioli\EmailReader\Defs\ReadType;
+use Mattioli\EmailReader\Defs\StructureType;
 use Mattioli\EmailReader\EmailMessage;
 
 /**
@@ -40,7 +41,6 @@ class EmailReader {
 	/**
 	 * Closes the connection
 	 *
-	 * @param None
 	 * @return Void
 	 */
 	private function __close() {
@@ -56,7 +56,6 @@ class EmailReader {
 	/**
 	 * Opens a connection
 	 *
-	 * @param None
 	 * @return Void
 	 */
 	private function __connect() {
@@ -153,7 +152,6 @@ class EmailReader {
 	/**
 	 * Reads the inbox
 	 *
-	 * @param None
 	 * @return array The associative array of each message
 	 */
 	private function __inbox() {
@@ -179,7 +177,6 @@ class EmailReader {
 	/**
 	 * Gets the inbox associative array
 	 *
-	 * @param None
 	 * @return array The inbox associative array
 	 */
 	public function get_inbox() {
@@ -188,6 +185,14 @@ class EmailReader {
 		return $inbox;
 	}
 
+
+	/**
+	 * [decode_email_string description]
+	 * @param  [type]  $string  [description]
+	 * @param  string  $charset [description]
+	 * @param  boolean $trim    [description]
+	 * @return [type]           [description]
+	 */
 	public function decode_email_string($string, $charset = 'UTF-8', $trim = true) {
 		$resp = ($trim ? trim($string) : $string);
 		if (preg_match("/=\?/", $resp)) {
@@ -199,6 +204,168 @@ class EmailReader {
 			$resp = utf8_encode($resp);
 		}
 		return $resp;
+	}
+
+	/**
+	 * [get_full_structure description]
+	 * @param  integer $msg_index [description]
+	 * @param  string  $prefix    [description]
+	 * @return [type]             [description]
+	 */
+	public function get_full_structure($msg_index = 0, $prefix = "") {
+		return $this->__action($msg_index, function ($msg) use ($prefix) {
+			return $this->__create_part_array($msg->get_structure(), $prefix);
+		});
+	}
+
+	/**
+	 * [get_body_by_structure description]
+	 * @param  integer $msg_index      [description]
+	 * @param  StructureType  $structure_part [description]
+	 * @return mixed                  [description]
+	 */
+	public function get_body_by_structure($msg_index = 0, $structure_part = StructureType::HTML) {
+		if (!in_array($structure_part, StructureType::get_types())) {
+			throw new EmailException("structure_part is not a StructureType");
+		}
+
+		$structure = $this->get_full_structure($msg_index);
+		if ($structure) foreach ($structure as $key => $part) {
+			if (strtoupper($part->part_object->subtype) == $structure_part) {
+				return $this->__inbox[$msg_index]->get_body_section(
+					$part->part_number
+				);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * imap-fetchbody() will decode attached email messages inline with the
+	 * rest of the email parts, however the way it works when handling attached
+	 * email messages is inconsistent with the main email message.
+	 *
+	 * With an email message that only has a text body and does not have any
+	 * mime attachments, imap-fetchbody() will return the following for each
+	 * requested part number:
+	 *
+	 * (empty) - Entire message
+	 * 0 - Message header
+	 * 1 - Body text
+	 *
+	 * With an email message that is a multi-part message in MIME format, and
+	 * contains the message text in plain text and HTML, and has a file.ext
+	 * attachment, imap-fetchbody() will return something like the following
+	 * for each requested part number:
+	 *
+	 * (empty) - Entire message
+	 * 0 - Message header
+	 * 1 - MULTIPART/ALTERNATIVE
+	 * 1.1 - TEXT/PLAIN
+	 * 1.2 - TEXT/HTML
+	 * 2 - file.ext
+	 *
+	 * Now if you attach the above email to an email with the message text in
+	 * plain text and HTML, imap_fetchbody() will use this type of part number
+	 * system:
+	 *
+	 * (empty) - Entire message
+	 * 0 - Message header
+	 * 1 - MULTIPART/ALTERNATIVE
+	 * 1.1 - TEXT/PLAIN
+	 * 1.2 - TEXT/HTML
+	 * 2 - MESSAGE/RFC822 (entire attached message)
+	 * 2.0 - Attached message header
+	 * 2.1 - TEXT/PLAIN
+	 * 2.2 - TEXT/HTML
+	 * 2.3 - file.ext
+	 *
+	 * Note that the file.ext is on the same level now as the plain text and
+	 * HTML, and that there is no way to access the MULTIPART/ALTERNATIVE in
+	 * the attached message.
+	 *
+	 * Here is a modified version of some of the code from previous posts that
+	 * will build an easily accessible array that includes accessible attached
+	 * message parts and the message body if there aren't multipart mimes.
+	 *
+	 * @param $structure The $structure variable is the output of the
+	 * imap_fetchstructure() function.
+	 *
+	 * @return array The returned $part_array has the field 'part_number' which
+	 * contains the part number to be fed directly into the imap_fetchbody()
+	 * function.
+	 */
+
+	private function __create_part_array(\stdClass $structure, $prefix = "") {
+		$part_array = [];
+		if (isset($structure->parts) and $structure->parts) {
+			// There some sub parts
+			foreach ($structure->parts as $count => $part) {
+				$this->__add_part_to_array(
+					$part, $prefix . ($count + 1), $part_array
+				);
+			}
+		} else {
+			// Email does not have a seperate mime attachment for text
+			$part_array[] = (object) array(
+				'part_number' => $prefix . '1',
+				'part_object' => $structure
+			);
+		}
+		return $part_array;
+	}
+
+	/**
+	 * Sub function for __create_part_array().
+	 * Only called by __create_part_array() and itself.
+	 */
+	private function __add_part_to_array(\stdClass $obj, $partno, &$part_array) {
+		$part_array[] = (object) array(
+			'part_number' => $partno,
+			'part_object' => $obj
+		);
+		if (isset($obj->type) and $obj->type == 2) {
+			// Check to see if the part is an attached email message, as in the
+			// RFC-822 type
+			if (isset($obj->parts) and $obj->parts) {
+				// Check to see if the email has parts
+				foreach ($obj->parts as $count => $part) {
+					// Iterate here again to compensate for the broken way that
+					// imap_fetchbody() handles attachments
+					if (isset($part->parts) and $part->parts == 2) {
+						foreach ($part->parts as $count2 => $part2) {
+							$this->__add_part_to_array(
+								$part2,
+								$partno . "." . ($count2 + 1),
+								$part_array
+							);
+						}
+					} else {
+						// Attached email does not have a seperate mime
+						// attachment for text
+						$part_array[] = (object) array(
+							'part_number' => $partno . '.' . ($count + 1),
+							'part_object' => $obj
+						);
+					}
+				}
+			} else {
+				// Not sure if this is possible
+				$part_array[] = (object) array(
+					'part_number' => $prefix . '.1',
+					'part_object' => $obj
+				);
+			}
+		} else {
+			// If there are more sub-parts, expand them out.
+			if (isset($obj->parts) and $obj->parts) {
+				foreach ($obj->parts as $count => $p) {
+					$this->__add_part_to_array(
+						$p, $partno . "." . ($count + 1), $part_array
+					);
+				}
+			}
+		}
 	}
 
 }
