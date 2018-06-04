@@ -161,7 +161,7 @@ class EmailReader {
 		$this->__msgCnt = imap_num_msg($this->conn);
 
 		$this->__inbox = array();
-		for($i = 1; $i <= $this->__msgCnt; $i++) {
+		for ($i = 1; $i <= $this->__msgCnt; $i++) {
 			$mail = new EmailMessage($this->conn, $i);
 			$r_type = $this->__config->get_read_type();
 			if ($r_type !== ReadType::ALL) {
@@ -186,6 +186,19 @@ class EmailReader {
 		$this->__init__();
 		$inbox = $this->__inbox;
 		return $inbox;
+	}
+
+	public function decode_email_string($string, $charset = 'UTF-8', $trim = true) {
+		$resp = ($trim ? trim($string) : $string);
+		if (preg_match("/=\?/", $resp)) {
+			$resp = iconv_mime_decode($resp, 0, $charset);
+		} else {
+			$resp = imap_utf8($resp);
+		}
+		if (json_encode($resp) === false) {
+			$resp = utf8_encode($resp);
+		}
+		return $resp;
 	}
 
 }
