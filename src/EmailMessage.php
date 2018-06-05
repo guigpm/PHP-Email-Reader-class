@@ -4,12 +4,13 @@ namespace Mattioli\EmailReader;
 use Mattioli\EmailReader\Exception\EmailResourceException;
 use Mattioli\EmailReader\Exception\EmailException;
 use Mattioli\EmailReader\Defs\EmailFolder;
+use Mattioli\EmailReader\Defs\EmailDef;
 
 /**
  * @author Guilherme Mattioli
  * @version 1.0
  */
-class EmailMessage implements \JsonSerializable {
+class EmailMessage extends EmailDef {
 	public $index = 1;
 	public $header = null;
 	public $body = null;
@@ -89,18 +90,45 @@ class EmailMessage implements \JsonSerializable {
 		return $flaged;
 	}
 
-	public function jsonSerialize() {
-		$oClass = new \ReflectionClass(get_called_class());
-		$props = $oClass->getProperties(
-			\ReflectionProperty::IS_PUBLIC
-		// |	\ReflectionProperty::IS_PROTECTED
-		);
-
-		$dados = [];
-		foreach ($props as $prop) {
-			$dados[$prop->name] = $this->{$prop->name};
+	private function __format_email_array($header_field = 'to') {
+		$headers = $this->get_headers();
+		if (!isset($headers->$header_field)) {
+			throw new EmailException("header_field is not a header");
 		}
-		return $dados;
+
+		$formated = [];
+		if ($headers->$header_field and is_array($headers->$header_field)) {
+			foreach ($headers->$header_field as $field) {
+				if (!is_object($field)) continue;
+				$obj = clone $field;
+				if (!isset($obj->personal)) $obj->personal = '';
+
+				$formated[] = (object) [
+					'name' => trim($obj->personal),
+					'email' => trim($obj->mailbox . '@' . $obj->host),
+				];
+			}
+
+			EmailDef::__utf8_Converter($formated);
+		}
+
+		return $formated;
+	}
+
+	public function get_formated_from() {
+		return $this->__format_email_array('from');
+	}
+
+	public function get_formated_to() {
+		return $this->__format_email_array('to');
+	}
+
+	public function get_formated_reply_to() {
+		return $this->__format_email_array('reply_to');
+	}
+
+	public function get_formated_sender() {
+		return $this->__format_email_array('sender');
 	}
 
 }

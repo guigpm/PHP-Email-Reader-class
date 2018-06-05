@@ -1,18 +1,19 @@
 <?php
 namespace Mattioli\EmailReader;
 
+use Mattioli\EmailReader\Defs\EmailDef;
+use Mattioli\EmailReader\Defs\ReadType;
+use Mattioli\EmailReader\Defs\StructureType;
 use Mattioli\EmailReader\EmailConfig;
 use Mattioli\EmailReader\Exception\EmailResourceException;
 use Mattioli\EmailReader\Exception\EmailException;
-use Mattioli\EmailReader\Defs\ReadType;
-use Mattioli\EmailReader\Defs\StructureType;
 use Mattioli\EmailReader\EmailMessage;
 
 /**
  * @author Guilherme Mattioli
  * @version 1.0
  */
-class EmailReader {
+class EmailReader extends EmailDef {
 
 	public $conn = null;
 
@@ -97,6 +98,35 @@ class EmailReader {
 		}
 
 		return null;
+	}
+
+	private function __format_email_array($msg, $header_field = 'to') {
+		$call = "get_formated_{$header_field}";
+		return $msg->$call();
+	}
+
+	public function get_formated_from($msg_index = 0) {
+		return $this->__action($msg_index, function ($msg) {
+			return $this->__format_email_array($msg, 'from');
+		});
+	}
+
+	public function get_formated_to($msg_index = 0) {
+		return $this->__action($msg_index, function ($msg) {
+			return $this->__format_email_array($msg, 'to');
+		});
+	}
+
+	public function get_formated_reply_to($msg_index = 0) {
+		return $this->__action($msg_index, function ($msg) {
+			return $this->__format_email_array($msg, 'reply_to');
+		});
+	}
+
+	public function get_formated_sender($msg_index = 0) {
+		return $this->__action($msg_index, function ($msg) {
+			return $this->__format_email_array($msg, 'sender');
+		});
 	}
 
 	/**
@@ -185,7 +215,6 @@ class EmailReader {
 		return $inbox;
 	}
 
-
 	/**
 	 * [decode_email_string description]
 	 * @param  [type]  $string  [description]
@@ -193,16 +222,18 @@ class EmailReader {
 	 * @param  boolean $trim    [description]
 	 * @return [type]           [description]
 	 */
-	public function decode_email_string($string, $charset = 'UTF-8', $trim = true) {
+	public function decode_email_string(
+		$string, $charset = 'UTF-8', $trim = true
+	) {
 		$resp = ($trim ? trim($string) : $string);
 		if (preg_match("/=\?/", $resp)) {
 			$resp = iconv_mime_decode($resp, 0, $charset);
 		} else {
 			$resp = imap_utf8($resp);
 		}
-		if (json_encode($resp) === false) {
-			$resp = utf8_encode($resp);
-		}
+		$this->__utf8_Converter($resp);
+		$resp = quoted_printable_decode($resp);
+		$this->__utf8_Converter($resp);
 		return $resp;
 	}
 
@@ -224,7 +255,9 @@ class EmailReader {
 	 * @param  StructureType  $structure_part [description]
 	 * @return mixed                  [description]
 	 */
-	public function get_body_by_structure($msg_index = 0, $structure_part = StructureType::HTML) {
+	public function get_body_by_structure(
+		$msg_index = 0, $structure_part = StructureType::HTML
+	) {
 		if (!in_array($structure_part, StructureType::get_types())) {
 			throw new EmailException("structure_part is not a StructureType");
 		}
@@ -319,7 +352,9 @@ class EmailReader {
 	 * Sub function for __create_part_array().
 	 * Only called by __create_part_array() and itself.
 	 */
-	private function __add_part_to_array(\stdClass $obj, $partno, &$part_array) {
+	private function __add_part_to_array(
+		\stdClass $obj, $partno, &$part_array
+	) {
 		$part_array[] = (object) array(
 			'part_number' => $partno,
 			'part_object' => $obj
