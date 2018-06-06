@@ -11,7 +11,7 @@ use Mattioli\EmailReader\Defs\EmailDef;
  * @version 1.0
  */
 class EmailMessage extends EmailDef {
-	public $index = 1;
+	public $uid = null;
 	public $header = null;
 	public $body = null;
 	public $structure = null;
@@ -29,32 +29,38 @@ class EmailMessage extends EmailDef {
 			throw new EmailException("index is less than 1");
 		}
 		$this->__conn = $conn;
-		$this->index = $index;
+		$this->uid = imap_uid($this->__conn, $index);
+	}
+
+	public function get_index() {
+		return imap_msgno($this->__conn, $this->uid);
 	}
 
 	public function get_headers() {
 		if ($this->header === null) {
-			$this->header = imap_headerinfo($this->__conn, $this->index);
+			$this->header = imap_headerinfo($this->__conn, $this->get_index());
 		}
 		return $this->header;
 	}
 
 	public function get_structure() {
 		if ($this->structure === null) {
-			$this->structure = imap_fetchstructure($this->__conn, $this->index);
+			$this->structure = imap_fetchstructure(
+				$this->__conn, $this->get_index()
+			);
 		}
 		return $this->structure;
 	}
 
 	public function get_body() {
 		if ($this->body === null) {
-			$this->body = imap_body($this->__conn, $this->index);
+			$this->body = imap_body($this->__conn, $this->get_index());
 		}
 		return $this->body;
 	}
 
 	public function get_body_section($section) {
-		return imap_fetchbody($this->__conn, $this->index, $section);
+		return imap_fetchbody($this->__conn, $this->get_index(), $section);
 	}
 
 	public function get_all() {
@@ -70,7 +76,7 @@ class EmailMessage extends EmailDef {
 		}
 		// move on server
 		$moved = imap_mail_move(
-			$this->__conn, $this->index, $prefix . $folder
+			$this->__conn, $this->get_index(), $prefix . $folder
 		);
 		imap_expunge($this->__conn);
 		return $moved;
@@ -78,14 +84,14 @@ class EmailMessage extends EmailDef {
 
 	public function delete() {
 		// delete on server
-		$deleted = imap_delete($this->__conn, $this->index);
+		$deleted = imap_delete($this->__conn, $this->get_index());
 		imap_expunge($this->__conn);
 		return $deleted;
 	}
 
 	public function set_flag($flag) {
 		// flag on server
-		$flaged = imap_setflag_full($this->__conn, $this->index, $flag);
+		$flaged = imap_setflag_full($this->__conn, $this->get_index(), $flag);
 		imap_expunge($this->__conn);
 		return $flaged;
 	}
