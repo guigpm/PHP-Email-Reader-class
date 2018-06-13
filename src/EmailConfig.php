@@ -63,8 +63,31 @@ class EmailConfig {
 	// --
 
 	public function set_email_type($type) {
-		if (in_array($type, EmailType::get_types())) {
+		$types = EmailType::get_types();
+		if (in_array($type, $types)) {
+
 			$this->__type = $type;
+		} elseif (is_string($type) and $type) {
+			$arr_type = explode('/', $type);
+			$ok = true;
+
+			$_type_ = '';
+			foreach ($arr_type as $_type) {
+				$in = (
+					in_array($_type, $types) or in_array("/{$_type}", $types)
+				);
+
+				if (!($ok = $in and $ok)) {
+					break;
+				}
+
+				if ($_type_) $_type_ .= '/';
+				$_type_ .= $_type;
+			}
+
+			if ($ok) {
+				$this->__type = $_type_;
+			}
 		}
 	}
 
