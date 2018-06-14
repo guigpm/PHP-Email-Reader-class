@@ -73,6 +73,9 @@ class EmailConfig {
 
 			$_type_ = '';
 			foreach ($arr_type as $_type) {
+				if (!($_type = trim($_type))) {
+					continue;
+				}
 				$in = (
 					in_array($_type, $types) or in_array("/{$_type}", $types)
 				);
@@ -85,7 +88,7 @@ class EmailConfig {
 				$_type_ .= $_type;
 			}
 
-			if ($ok) {
+			if ($ok and $_type_) {
 				$this->__type = $_type_;
 			}
 		}
