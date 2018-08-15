@@ -2,6 +2,7 @@
 namespace Mattioli\EmailReader;
 
 use Mattioli\EmailReader\Defs\EmailDef;
+use Mattioli\EmailReader\Defs\EncodeType;
 use Mattioli\EmailReader\Defs\ReadType;
 use Mattioli\EmailReader\Defs\StructureType;
 use Mattioli\EmailReader\EmailConfig;
@@ -250,6 +251,20 @@ class EmailReader extends EmailDef {
 	}
 
 	/**
+	 * [__is_valid_base64 description]
+	 * @param  [type]  $str [description]
+	 * @return boolean      [description]
+	 */
+	private function __is_valid_base64($str) {
+	   if (!is_string($str)) return false;
+	    $_str = preg_replace("/\s+/", "", $str);
+	    $decode = base64_decode($_str, true);
+	    if (!$decode) return false;
+	    $_b64 = base64_encode($decode);
+	    return ($_b64 === $_str);
+	}
+
+	/**
 	 * [get_body_by_structure description]
 	 * @param  integer $msg_index      [description]
 	 * @param  StructureType  $structure_part [description]
@@ -265,9 +280,24 @@ class EmailReader extends EmailDef {
 		$structure = $this->get_full_structure($msg_index);
 		if ($structure) foreach ($structure as $key => $part) {
 			if (strtoupper($part->part_object->subtype) == $structure_part) {
-				return $this->__inbox[$msg_index]->get_body_section(
+				$body = $this->__inbox[$msg_index]->get_body_section(
 					$part->part_number
 				);
+
+				if (isset($part->part_object->encoding))
+				switch ($part->part_object->encoding) {
+					case EncodeType::BASE64:
+						if ($this->__is_valid_base64($body)) {
+							$body = preg_replace("/\s+/", "", $body);
+							$body = base64_decode($body);
+						}
+						break;
+
+					case EncodeType::PLAIN:
+					default:
+						break;
+				}
+				return $body;
 			}
 		}
 		return null;
