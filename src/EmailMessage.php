@@ -106,6 +106,8 @@ class EmailMessage extends EmailDef {
 		if ($headers->$header_field and is_array($headers->$header_field)) {
 			foreach ($headers->$header_field as $field) {
 				if (!is_object($field)) continue;
+				if (!isset($field->mailbox) or !isset($field->host)) continue;
+
 				$obj = clone $field;
 				if (!isset($obj->personal)) $obj->personal = '';
 
